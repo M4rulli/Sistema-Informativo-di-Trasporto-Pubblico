@@ -6,6 +6,14 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * BaseCliView
+ * Classe base per tutte le "View" CLI.
+ * Scopo:
+ * - Centralizzare rendering testuale (box Unicode), input da console e menu numerati.
+ * - Evitare duplicazione di logica tra le varie viste (LoginView, PublicView, ConducenteView, ecc.).
+ */
+
 public abstract class BaseCliView {
 
     protected static final BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -143,43 +151,5 @@ public abstract class BaseCliView {
                 System.out.println("Errore lettura input.");
             }
         }
-    }
-
-    public static void pressEnterBox() {
-        List<String> lines = List.of(
-                "Premi INVIO per continuare..."
-        );
-        printBox("Info", lines, 50);
-        try { reader.readLine(); } catch (IOException ignored) {}
-    }
-
-    // ==========================
-    //  API pubblica "BOX"
-    // ==========================
-
-    public static void box(String title, List<String> lines) {
-        int innerWidth = computeInnerWidth(title, lines);
-        System.out.println();
-        printBox(title, lines, innerWidth);
-    }
-
-    public static void box(String title, String message) {
-        box(title, List.of(message));
-    }
-
-    private static int computeInnerWidth(String title, List<String> lines) {
-        int max = 0;
-        if (title != null) max = title.length();
-        if (lines != null) {
-            for (String s : lines) {
-                if (s != null) {
-                    // considera anche righe con \n
-                    for (String part : s.split("\\R")) {
-                        max = Math.max(max, part.length());
-                    }
-                }
-            }
-        }
-        return Math.max(30, Math.min(120, max));
     }
 }

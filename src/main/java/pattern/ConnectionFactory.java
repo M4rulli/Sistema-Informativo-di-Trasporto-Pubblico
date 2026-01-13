@@ -84,8 +84,6 @@ public final class ConnectionFactory {
         }
         if (password == null) password = "";
 
-        Connection conn = DriverManager.getConnection(dbUrl, user, password);
-        System.out.println("[DB] connected as = " + conn.getMetaData().getUserName());
-        return conn;
+        return DriverManager.getConnection(dbUrl, user, password);
     }
 }

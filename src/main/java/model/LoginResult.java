@@ -8,19 +8,13 @@ package model;
  */
 public class LoginResult {
 
-    private final String username;
     private final Role role;
-    private final String cfConducente;
 
-    public LoginResult(String username, Role role, String cfConducente) {
-        this.username = username;
+    public LoginResult(Role role) {
         this.role = role;
-        this.cfConducente = cfConducente;
     }
 
-    public String getUsername() { return username; }
     public Role getRuolo() { return role; }
-    public String getCfConducente() { return cfConducente; }
 
     public boolean isConducente() {
         return role == Role.CONDUCENTE;

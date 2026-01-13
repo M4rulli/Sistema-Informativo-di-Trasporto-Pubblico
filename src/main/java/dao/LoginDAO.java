@@ -24,8 +24,8 @@ public class LoginDAO {
             try (Connection conn = ConnectionFactory.getConnectionForLogin();
                  CallableStatement cs = conn.prepareCall("{CALL trasporto_pubblico.sp_login(?, ?, ?, ?)}")) {
 
-                cs.setString(1, credentials.getUsername());
-                cs.setString(2, credentials.getPassword());
+                cs.setString(1, credentials.username());
+                cs.setString(2, credentials.password());
 
                 // OUT: ruolo + (opzionale) cf_conducente
                 cs.registerOutParameter(3, Types.VARCHAR);
@@ -39,9 +39,8 @@ public class LoginDAO {
                 }
 
                 Role ruolo = Role.valueOf(ruoloStr);
-                String cf = cs.getString(4); // può essere null
 
-                return new LoginResult(credentials.getUsername(), ruolo, cf);
+                return new LoginResult(ruolo);
             }
         } catch (SQLException e) {
             throw new DatabaseException("Errore durante il tentativo di login.", e);
