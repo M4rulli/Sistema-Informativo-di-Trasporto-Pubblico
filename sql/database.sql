@@ -212,9 +212,7 @@ BEGIN
         SET v_not_found = TRUE;
 
     IF p_matricola IS NULL OR p_cod_fermata_target IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20101,
-                MESSAGE_TEXT = 'OP01: parametri mancanti';
+        SIGNAL SQLSTATE '45050' SET MESSAGE_TEXT = 'OP01: parametri mancanti';
     END IF;
 
     -- 1 sola query sulle tabelle: calcolo la distanza
@@ -235,9 +233,7 @@ BEGIN
     LIMIT 1;
 
     IF v_not_found THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20102,
-                MESSAGE_TEXT = 'OP01: nessun dato trovato per i parametri forniti';
+        SIGNAL SQLSTATE '45060' SET MESSAGE_TEXT = 'OP01: nessun dato trovato per i parametri forniti';
     END IF;
 
     SELECT v_distanza AS distanza_fermate;
@@ -307,9 +303,7 @@ BEGIN
     DECLARE v_next TIME;
 
     IF p_numero_tratta IS NULL OR p_direzione IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20201,
-                MESSAGE_TEXT = 'OP02: parametri mancanti';
+        SIGNAL SQLSTATE '45060' SET MESSAGE_TEXT = 'OP02: parametri mancanti';
     END IF;
 
     SELECT MIN(ora_partenza) INTO v_next
@@ -326,9 +320,7 @@ BEGIN
     END IF;
 
     IF v_next IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20202,
-                MESSAGE_TEXT = 'OP02: nessun orario configurato per la tratta';
+        SIGNAL SQLSTATE '45070' SET MESSAGE_TEXT = 'OP02: nessun orario configurato per la tratta';
     END IF;
 
     SELECT v_next AS prossima_partenza;
@@ -357,9 +349,7 @@ BEGIN
         END;
 
     IF p_cod_titolo IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20301,
-                MESSAGE_TEXT = 'OP03a: codice titolo mancante';
+        SIGNAL SQLSTATE '45080' SET MESSAGE_TEXT = 'OP03a: codice titolo mancante';
     END IF;
 
     SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
@@ -372,27 +362,19 @@ BEGIN
         FOR UPDATE;
 
     IF v_tipo IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20302,
-                MESSAGE_TEXT = 'OP03a: titolo inesistente';
+        SIGNAL SQLSTATE '45090' SET MESSAGE_TEXT = 'OP03a: titolo inesistente';
     END IF;
 
     IF v_tipo <> 'B' THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20303,
-                MESSAGE_TEXT = 'OP03a: titolo non è un biglietto';
+        SIGNAL SQLSTATE '45100' SET MESSAGE_TEXT = 'OP03a: titolo non è un biglietto';
     END IF;
 
     IF v_last IS NOT NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20304,
-                MESSAGE_TEXT = 'OP03a: biglietto già utilizzato';
+        SIGNAL SQLSTATE '45110' SET MESSAGE_TEXT = 'OP03a: biglietto già utilizzato';
     END IF;
 
     IF v_scad IS NOT NULL AND v_scad < CURDATE() THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20305,
-                MESSAGE_TEXT = 'OP03a: biglietto scaduto';
+        SIGNAL SQLSTATE '45120' SET MESSAGE_TEXT = 'OP03a: biglietto scaduto';
     END IF;
 
     UPDATE Titolo
@@ -426,9 +408,7 @@ BEGIN
         END;
 
     IF p_cod_titolo IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20401,
-                MESSAGE_TEXT = 'OP03b: codice titolo mancante';
+        SIGNAL SQLSTATE '45130' SET MESSAGE_TEXT = 'OP03b: codice titolo mancante';
     END IF;
 
     SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
@@ -441,21 +421,15 @@ BEGIN
         FOR UPDATE;
 
     IF v_tipo IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20402,
-                MESSAGE_TEXT = 'OP03b: titolo inesistente';
+        SIGNAL SQLSTATE '45140' SET MESSAGE_TEXT = 'OP03b: titolo inesistente';
     END IF;
 
     IF v_tipo <> 'A' THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20403,
-                MESSAGE_TEXT = 'OP03b: titolo non è un abbonamento';
+        SIGNAL SQLSTATE '45150' SET MESSAGE_TEXT = 'OP03b: titolo non è un abbonamento';
     END IF;
 
     IF v_scad IS NULL OR v_scad < CURDATE() THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20404,
-                MESSAGE_TEXT = 'OP03b: abbonamento scaduto o senza scadenza';
+        SIGNAL SQLSTATE '45160' SET MESSAGE_TEXT = 'OP03b: abbonamento scaduto o senza scadenza';
     END IF;
 
     UPDATE Titolo
@@ -484,15 +458,11 @@ BEGIN
     -- Violazione vincoli di unicità/PK (qui usato per segnalare RV2/duplicati)
     DECLARE EXIT HANDLER FOR 1062
         BEGIN
-            SIGNAL SQLSTATE '45000'
-                SET MYSQL_ERRNO = 20502,
-                    MESSAGE_TEXT = 'OP04/RV2: veicolo già assegnato a una tratta (o assegnazione già esistente)';
+            SIGNAL SQLSTATE '45170' SET MESSAGE_TEXT = 'OP04/RV2: veicolo già assegnato a una tratta (o assegnazione già esistente)';
         END;
 
     IF p_matricola IS NULL OR p_numero_tratta IS NULL OR p_direzione IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20501,
-                MESSAGE_TEXT = 'OP04: parametri mancanti';
+        SIGNAL SQLSTATE '45180' SET MESSAGE_TEXT = 'OP04: parametri mancanti';
     END IF;
 
     -- Single statement: inserisce solo se esistono veicolo e tratta
@@ -505,9 +475,7 @@ BEGIN
     WHERE v.matricola = p_matricola;
 
     IF ROW_COUNT() = 0 THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20503,
-                MESSAGE_TEXT = 'OP04: veicolo o tratta inesistenti';
+        SIGNAL SQLSTATE '45180' SET MESSAGE_TEXT = 'OP04: veicolo o tratta inesistenti';
     END IF;
 
     SELECT 'OK' AS esito,
@@ -532,15 +500,11 @@ BEGIN
     -- Duplicate key: la coppia (cf, matricola) è già presente (PK di Guida)
     DECLARE EXIT HANDLER FOR 1062
         BEGIN
-            SIGNAL SQLSTATE '45000'
-                SET MYSQL_ERRNO = 20602,
-                    MESSAGE_TEXT = 'OP05: associazione conducente-veicolo già esistente';
+            SIGNAL SQLSTATE '45190' SET MESSAGE_TEXT = 'OP05: associazione conducente-veicolo già esistente';
         END;
 
     IF p_cf IS NULL OR p_matricola IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20601,
-                MESSAGE_TEXT = 'OP05: parametri mancanti';
+        SIGNAL SQLSTATE '45200' SET MESSAGE_TEXT = 'OP05: parametri mancanti';
     END IF;
 
     -- Single statement: inserisce solo se esistono conducente e veicolo
@@ -552,9 +516,7 @@ BEGIN
     WHERE c.cf = p_cf;
 
     IF ROW_COUNT() = 0 THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20603,
-                MESSAGE_TEXT = 'OP05: conducente o veicolo inesistenti';
+        SIGNAL SQLSTATE '45210' SET MESSAGE_TEXT = 'OP05: conducente o veicolo inesistenti';
     END IF;
 
     SELECT 'OK' AS esito,
@@ -583,16 +545,12 @@ BEGIN
     -- Duplicate key: CF già presente (PK) o numero_patente già presente (UNIQUE)
     DECLARE EXIT HANDLER FOR 1062
         BEGIN
-            SIGNAL SQLSTATE '45000'
-                SET MYSQL_ERRNO = 20612,
-                    MESSAGE_TEXT = 'OP06a: conducente già esistente o patente già registrata';
+            SIGNAL SQLSTATE '45220' SET MESSAGE_TEXT = 'OP06a: conducente già esistente o patente già registrata';
         END;
 
     IF p_cf IS NULL OR p_nome IS NULL OR p_cognome IS NULL OR p_data_nascita IS NULL
         OR p_luogo_nascita IS NULL OR p_numero_patente IS NULL OR p_scadenza_patente IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20611,
-                MESSAGE_TEXT = 'OP06a: parametri mancanti';
+        SIGNAL SQLSTATE '45230' SET MESSAGE_TEXT = 'OP06a: parametri mancanti';
     END IF;
 
     INSERT INTO Conducente(
@@ -623,15 +581,11 @@ SQL SECURITY DEFINER
 BEGIN
     DECLARE EXIT HANDLER FOR 1062
         BEGIN
-            SIGNAL SQLSTATE '45000'
-                SET MYSQL_ERRNO = 20622,
-                    MESSAGE_TEXT = 'OP06b: patente già registrata su un altro conducente';
+            SIGNAL SQLSTATE '45240' SET MESSAGE_TEXT = 'OP06b: patente già registrata su un altro conducente';
         END;
 
     IF p_cf IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20621,
-                MESSAGE_TEXT = 'OP06b: CF mancante';
+        SIGNAL SQLSTATE '45250' SET MESSAGE_TEXT = 'OP06b: CF mancante';
     END IF;
 
     UPDATE Conducente
@@ -644,9 +598,7 @@ BEGIN
     WHERE cf = p_cf;
 
     IF ROW_COUNT() = 0 THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20623,
-                MESSAGE_TEXT = 'OP06b: conducente inesistente';
+        SIGNAL SQLSTATE '45260' SET MESSAGE_TEXT = 'OP06b: conducente inesistente';
     END IF;
 
     SELECT 'OK' AS esito, p_cf AS cf;
@@ -672,22 +624,16 @@ BEGIN
   -- Duplicati sulla PK (tratta, direzione, ora)
   DECLARE EXIT HANDLER FOR 1062
   BEGIN
-    SIGNAL SQLSTATE '45000'
-      SET MYSQL_ERRNO = 20740,
-          MESSAGE_TEXT = 'OP07: conflitto, orario già presente';
+    SIGNAL SQLSTATE '45280' SET MESSAGE_TEXT = 'OP07: conflitto, orario già presente';
   END;
 
   IF p_azione IS NULL OR p_numero_tratta IS NULL OR p_direzione IS NULL THEN
-    SIGNAL SQLSTATE '45000'
-      SET MYSQL_ERRNO = 20741,
-          MESSAGE_TEXT = 'OP07: parametri mancanti';
+    SIGNAL SQLSTATE '45290' SET MESSAGE_TEXT = 'OP07: parametri mancanti';
   END IF;
 
   IF p_azione = 'INS' THEN
     IF p_ora IS NULL THEN
-      SIGNAL SQLSTATE '45000'
-        SET MYSQL_ERRNO = 20743,
-            MESSAGE_TEXT = 'OP07/INS: ora mancante';
+      SIGNAL SQLSTATE '45300' SET MESSAGE_TEXT = 'OP07/INS: ora mancante';
     END IF;
 
     INSERT INTO Orario_Partenza(numero_tratta, direzione, ora_partenza)
@@ -697,9 +643,7 @@ BEGIN
 
   ELSEIF p_azione = 'DEL' THEN
     IF p_ora IS NULL THEN
-      SIGNAL SQLSTATE '45000'
-        SET MYSQL_ERRNO = 20744,
-            MESSAGE_TEXT = 'OP07/DEL: ora mancante';
+      SIGNAL SQLSTATE '45310' SET MESSAGE_TEXT = 'OP07/DEL: ora mancante';
     END IF;
 
     DELETE FROM Orario_Partenza
@@ -708,18 +652,14 @@ BEGIN
       AND ora_partenza  = p_ora;
 
     IF ROW_COUNT() = 0 THEN
-      SIGNAL SQLSTATE '45000'
-        SET MYSQL_ERRNO = 20745,
-            MESSAGE_TEXT = 'OP07/DEL: orario inesistente';
+      SIGNAL SQLSTATE '45320' SET MESSAGE_TEXT = 'OP07/DEL: orario inesistente';
     END IF;
 
     SELECT 'OK' AS esito, 'DEL' AS azione;
 
   ELSEIF p_azione = 'UPD' THEN
     IF p_ora IS NULL OR p_ora_new IS NULL THEN
-      SIGNAL SQLSTATE '45000'
-        SET MYSQL_ERRNO = 20746,
-            MESSAGE_TEXT = 'OP07/UPD: ora o ora_new mancanti';
+      SIGNAL SQLSTATE '45330' SET MESSAGE_TEXT = 'OP07/UPD: ora o ora_new mancanti';
     END IF;
 
     UPDATE Orario_Partenza
@@ -729,17 +669,13 @@ BEGIN
       AND ora_partenza  = p_ora;
 
     IF ROW_COUNT() = 0 THEN
-      SIGNAL SQLSTATE '45000'
-        SET MYSQL_ERRNO = 20747,
-            MESSAGE_TEXT = 'OP07/UPD: orario inesistente';
+      SIGNAL SQLSTATE '45340' SET MESSAGE_TEXT = 'OP07/UPD: orario inesistente';
     END IF;
 
     SELECT 'OK' AS esito, 'UPD' AS azione;
 
   ELSE
-    SIGNAL SQLSTATE '45000'
-      SET MYSQL_ERRNO = 20748,
-          MESSAGE_TEXT = 'OP07: azione non valida (usa INS/DEL/UPD)';
+    SIGNAL SQLSTATE '45350' SET MESSAGE_TEXT = 'OP07: azione non valida (usa INS/DEL/UPD)';
   END IF;
 END $$
 
@@ -766,16 +702,12 @@ BEGIN
                 END;
 
             IF p_quantita IS NULL OR p_quantita <= 0 THEN
-                SIGNAL SQLSTATE '45000'
-                    SET MYSQL_ERRNO = 20801,
-                        MESSAGE_TEXT = 'OP08a: quantità non valida';
+                SIGNAL SQLSTATE '45360' SET MESSAGE_TEXT = 'OP08a: quantità non valida';
             END IF;
 
             -- soglia di sicurezza per evitare lotti enormi per errore
             IF p_quantita > 50000 THEN
-                SIGNAL SQLSTATE '45000'
-                    SET MYSQL_ERRNO = 20802,
-                        MESSAGE_TEXT = 'OP08a: quantità troppo elevata';
+                SIGNAL SQLSTATE '45370' SET MESSAGE_TEXT = 'OP08a: quantità troppo elevata';
             END IF;
 
             -- Prefisso lotto: YYMMDD (es. 240601)
@@ -817,21 +749,15 @@ SQL SECURITY DEFINER
 BEGIN
     DECLARE EXIT HANDLER FOR 1062
         BEGIN
-            SIGNAL SQLSTATE '45000'
-                SET MYSQL_ERRNO = 20812,
-                    MESSAGE_TEXT = 'OP08b: codice titolo già esistente';
+            SIGNAL SQLSTATE '45380' SET MESSAGE_TEXT = 'OP08b: codice titolo già esistente';
         END;
 
     IF p_cod_titolo IS NULL OR p_scadenza IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20811,
-                MESSAGE_TEXT = 'OP08b: parametri mancanti';
+        SIGNAL SQLSTATE '45390' SET MESSAGE_TEXT = 'OP08b: parametri mancanti';
     END IF;
 
     IF p_scadenza < CURDATE() THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20813,
-                MESSAGE_TEXT = 'OP08b: scadenza non valida (nel passato)';
+        SIGNAL SQLSTATE '45400' SET MESSAGE_TEXT = 'OP08b: scadenza non valida (nel passato)';
     END IF;
 
     INSERT INTO Titolo(cod_titolo, tipo, scadenza, ultimo_utilizzo)
@@ -857,22 +783,16 @@ BEGIN
     -- Duplicate key su PK(matricola)
     DECLARE EXIT HANDLER FOR 1062
         BEGIN
-            SIGNAL SQLSTATE '45000'
-                SET MYSQL_ERRNO = 20902,
-                    MESSAGE_TEXT = 'OP09: matricola già esistente';
+            SIGNAL SQLSTATE '45410' SET MESSAGE_TEXT = 'OP09: matricola già esistente';
         END;
 
     IF p_azione IS NULL OR p_matricola IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20901,
-                MESSAGE_TEXT = 'OP09: azione o matricola mancanti';
+        SIGNAL SQLSTATE '45420' SET MESSAGE_TEXT = 'OP09: azione o matricola mancanti';
     END IF;
 
     IF p_azione = 'INS' THEN
         IF p_data_acquisto IS NULL THEN
-            SIGNAL SQLSTATE '45000'
-                SET MYSQL_ERRNO = 20903,
-                    MESSAGE_TEXT = 'OP09/INS: data_acquisto mancante';
+            SIGNAL SQLSTATE '45430' SET MESSAGE_TEXT = 'OP09/INS: data_acquisto mancante';
         END IF;
 
         INSERT INTO Veicolo(matricola, data_acquisto)
@@ -887,17 +807,13 @@ BEGIN
         WHERE matricola = p_matricola;
 
         IF ROW_COUNT() = 0 THEN
-            SIGNAL SQLSTATE '45000'
-                SET MYSQL_ERRNO = 20904,
-                    MESSAGE_TEXT = 'OP09/UPD: veicolo inesistente';
+            SIGNAL SQLSTATE '45440' SET MESSAGE_TEXT = 'OP09/UPD: veicolo inesistente';
         END IF;
 
         SELECT 'OK' AS esito, 'UPD' AS azione, p_matricola AS matricola;
 
     ELSE
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 20905,
-                MESSAGE_TEXT = 'OP09: azione non valida (usa INS/UPD)';
+        SIGNAL SQLSTATE '45450' SET MESSAGE_TEXT = 'OP09: azione non valida (usa INS/UPD)';
     END IF;
 END $$
 
@@ -919,22 +835,16 @@ BEGIN
     -- Duplicate key su PK(cod_fermata)
     DECLARE EXIT HANDLER FOR 1062
         BEGIN
-            SIGNAL SQLSTATE '45000'
-                SET MYSQL_ERRNO = 21002,
-                    MESSAGE_TEXT = 'OP10: fermata già esistente';
+            SIGNAL SQLSTATE '45460' SET MESSAGE_TEXT = 'OP10: fermata già esistente';
         END;
 
     IF p_azione IS NULL OR p_cod_fermata IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 21001,
-                MESSAGE_TEXT = 'OP10: azione o codice fermata mancanti';
+        SIGNAL SQLSTATE '45470' SET MESSAGE_TEXT = 'OP10: azione o codice fermata mancanti';
     END IF;
 
     IF p_azione = 'INS' THEN
         IF p_lat IS NULL OR p_lon IS NULL THEN
-            SIGNAL SQLSTATE '45000'
-                SET MYSQL_ERRNO = 21003,
-                    MESSAGE_TEXT = 'OP10/INS: coordinate mancanti';
+            SIGNAL SQLSTATE '45480' SET MESSAGE_TEXT = 'OP10/INS: coordinate mancanti';
         END IF;
 
         INSERT INTO Fermata(cod_fermata, lat, lon)
@@ -949,17 +859,13 @@ BEGIN
         WHERE cod_fermata = p_cod_fermata;
 
         IF ROW_COUNT() = 0 THEN
-            SIGNAL SQLSTATE '45000'
-                SET MYSQL_ERRNO = 21004,
-                    MESSAGE_TEXT = 'OP10/UPD: fermata inesistente';
+            SIGNAL SQLSTATE '45490' SET MESSAGE_TEXT = 'OP10/UPD: fermata inesistente';
         END IF;
 
         SELECT 'OK' AS esito, 'UPD' AS azione, p_cod_fermata AS cod_fermata;
 
     ELSE
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 21005,
-                MESSAGE_TEXT = 'OP10: azione non valida (usa INS/UPD)';
+        SIGNAL SQLSTATE '45500' SET MESSAGE_TEXT = 'OP10: azione non valida (usa INS/UPD)';
     END IF;
 END $$
 
@@ -987,27 +893,21 @@ BEGIN
         END;
 
     IF p_numero_tratta IS NULL OR p_direzione IS NULL OR p_cod_fermata IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 21101,
-                MESSAGE_TEXT = 'OP11: parametri mancanti';
+        SIGNAL SQLSTATE '45510' SET MESSAGE_TEXT = 'OP11: parametri mancanti';
     END IF;
 
     IF NOT EXISTS (
         SELECT 1 FROM Tratta
         WHERE numero_tratta = p_numero_tratta AND direzione = p_direzione
     ) THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 21102,
-                MESSAGE_TEXT = 'OP11: tratta/direzione inesistente';
+        SIGNAL SQLSTATE '45520' SET MESSAGE_TEXT = 'OP11: tratta/direzione inesistente';
     END IF;
 
     IF NOT EXISTS (
         SELECT 1 FROM Fermata
         WHERE cod_fermata = p_cod_fermata
     ) THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 21103,
-                MESSAGE_TEXT = 'OP11: fermata inesistente';
+        SIGNAL SQLSTATE '45530' SET MESSAGE_TEXT = 'OP11: fermata inesistente';
     END IF;
 
     SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
@@ -1075,9 +975,7 @@ BEGIN
         END;
 
     IF p_matricola IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 21201,
-                MESSAGE_TEXT = 'OP12: matricola mancante';
+        SIGNAL SQLSTATE '45540' SET MESSAGE_TEXT = 'OP12: matricola mancante';
     END IF;
 
     SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
@@ -1095,9 +993,7 @@ BEGIN
         FOR UPDATE;
 
     IF v_not_found THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 21202,
-                MESSAGE_TEXT = 'OP12: posizione veicolo non disponibile';
+        SIGNAL SQLSTATE '45550' SET MESSAGE_TEXT = 'OP12: posizione veicolo non disponibile';
     END IF;
 
     -- Tratta/direzione del veicolo
@@ -1109,9 +1005,7 @@ BEGIN
     LIMIT 1;
 
     IF v_not_found THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 21203,
-                MESSAGE_TEXT = 'OP12: veicolo non assegnato a tratta';
+        SIGNAL SQLSTATE '45560' SET MESSAGE_TEXT = 'OP12: veicolo non assegnato a tratta';
     END IF;
 
     -- Ordine della fermata corrente nella sequenza
@@ -1124,9 +1018,7 @@ BEGIN
       AND cod_fermata   = v_curr;
 
     IF v_not_found THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 21204,
-                MESSAGE_TEXT = 'OP12: fermata corrente non presente nella tratta';
+        SIGNAL SQLSTATE '45570' SET MESSAGE_TEXT = 'OP12: fermata corrente non presente nella tratta';
     END IF;
 
     -- Fermata successiva (ordine+1); se non esiste, riparto dalla prima (capolinea)
@@ -1149,9 +1041,7 @@ BEGIN
         LIMIT 1;
 
         IF v_not_found THEN
-            SIGNAL SQLSTATE '45000'
-                SET MYSQL_ERRNO = 21205,
-                    MESSAGE_TEXT = 'OP12: tratta senza fermate (Comprende vuota)';
+            SIGNAL SQLSTATE '45580' SET MESSAGE_TEXT = 'OP12: tratta senza fermate (Comprende vuota)';
         END IF;
     END IF;
 
@@ -1192,9 +1082,7 @@ BEGIN
         SET v_not_found = TRUE;
 
     IF p_matricola IS NULL OR p_n IS NULL OR p_n <= 0 THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 21301,
-                MESSAGE_TEXT = 'OP13: parametri non validi (matricola o N)';
+        SIGNAL SQLSTATE '45590' SET MESSAGE_TEXT = 'OP13: parametri non validi (matricola o N)';
     END IF;
 
     -- 1) Recupero tratta/direzione e ordine della fermata corrente
@@ -1211,9 +1099,7 @@ BEGIN
     LIMIT 1;
 
     IF v_not_found THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 21302,
-                MESSAGE_TEXT = 'OP13: veicolo non trovato o dati incoerenti';
+        SIGNAL SQLSTATE '45600' SET MESSAGE_TEXT = 'OP13: veicolo non trovato o dati incoerenti';
     END IF;
 
     -- 2) Prossime N fermate
@@ -1247,9 +1133,7 @@ BEGIN
         SET v_not_found = TRUE;
 
     IF p_numero_tratta IS NULL OR p_direzione IS NULL THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 21401,
-                MESSAGE_TEXT = 'OP14: parametri mancanti';
+        SIGNAL SQLSTATE '45610' SET MESSAGE_TEXT = 'OP14: parametri mancanti';
     END IF;
 
     -- 1) Verifica che la tratta/direzione esista
@@ -1261,9 +1145,7 @@ BEGIN
       AND direzione     = p_direzione;
 
     IF v_not_found THEN
-        SIGNAL SQLSTATE '45000'
-            SET MYSQL_ERRNO = 21402,
-                MESSAGE_TEXT = 'OP14: tratta/direzione inesistente';
+        SIGNAL SQLSTATE '45620' SET MESSAGE_TEXT = 'OP14: tratta/direzione inesistente';
     END IF;
 
     -- 2) Result set #1: fermate in ordine

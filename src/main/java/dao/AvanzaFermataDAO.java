@@ -24,13 +24,21 @@ public class AvanzaFermataDAO {
             cs.setString(1, matricola);
 
             boolean hasRs = cs.execute();
+
+            while (!hasRs && cs.getUpdateCount() != -1) {
+                hasRs = cs.getMoreResults();
+            }
+
             if (!hasRs) {
-                throw new DatabaseException("Errore 0: \"OP12: nessun risultato restituito dalla stored procedure.\"");
+                throw new DatabaseException("OP12: nessun ResultSet restituito dalla stored procedure.");
             }
 
             try (ResultSet rs = cs.getResultSet()) {
+                if (rs == null) {
+                    throw new DatabaseException("OP12: ResultSet nullo (nessun risultato).");
+                }
                 if (!rs.next()) {
-                    throw new DatabaseException("Errore 0: \"OP12: result set vuoto.\"");
+                    throw new DatabaseException("OP12: ResultSet vuoto.");
                 }
 
                 String outMatricola = rs.getString("matricola");
@@ -45,16 +53,7 @@ public class AvanzaFermataDAO {
             }
 
         } catch (SQLException e) {
-            throw new DatabaseException(
-                    String.format("Errore %d: \"%s\"", e.getErrorCode(), safeSqlMessage(e)),
-                    e
-            );
+            throw new DatabaseException(e.getSQLState(), e);
         }
-    }
-
-    private String safeSqlMessage(SQLException e) {
-        String msg = e.getMessage();
-        if (msg == null) return "(nessun messaggio)";
-        return msg.replace("\n", " ").replace("\r", " ");
     }
 }

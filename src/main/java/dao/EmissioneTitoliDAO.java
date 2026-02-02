@@ -24,7 +24,7 @@ public class EmissioneTitoliDAO {
             }
 
         } catch (SQLException e) {
-            throw new DatabaseException(String.format("Errore %d: \"%s\"", e.getErrorCode(), safeSqlMessage(e)), e);
+            throw new DatabaseException(e.getSQLState(), e);
         }
     }
 
@@ -37,13 +37,7 @@ public class EmissioneTitoliDAO {
             cs.execute();
 
         } catch (SQLException e) {
-            throw new DatabaseException(String.format("Errore %d: \"%s\"", e.getErrorCode(), safeSqlMessage(e)), e);
+            throw new DatabaseException(e.getSQLState(), e);
         }
-    }
-
-    private String safeSqlMessage(SQLException e) {
-        String msg = e.getMessage();
-        if (msg == null) return "(nessun messaggio)";
-        return msg.replace("\n", " ").replace("\r", " ");
     }
 }
